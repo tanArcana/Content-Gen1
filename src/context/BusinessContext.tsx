@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Business, BrandDNA, Platform, ChatMessage } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,40 +22,39 @@ const BusinessContext = createContext<BusinessContextType | null>(null);
 const STORAGE_KEY = 'content-gen1-businesses';
 const SELECTED_KEY = 'content-gen1-selected';
 
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function BusinessProvider({ children }: { children: React.ReactNode }) {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [businesses, setBusinesses] = useState<Business[]>(() => loadFromStorage(STORAGE_KEY, []));
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(SELECTED_KEY);
+  });
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setBusinesses(JSON.parse(stored));
-      } catch { /* ignore */ }
-    }
-    const selectedId = localStorage.getItem(SELECTED_KEY);
-    if (selectedId) setSelectedBusinessId(selectedId);
-    setLoaded(true);
-  }, []);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(businesses));
+  }, [businesses]);
 
   useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(businesses));
+    if (selectedBusinessId) {
+      localStorage.setItem(SELECTED_KEY, selectedBusinessId);
+    } else {
+      localStorage.removeItem(SELECTED_KEY);
     }
-  }, [businesses, loaded]);
+  }, [selectedBusinessId]);
 
-  useEffect(() => {
-    if (loaded) {
-      if (selectedBusinessId) {
-        localStorage.setItem(SELECTED_KEY, selectedBusinessId);
-      } else {
-        localStorage.removeItem(SELECTED_KEY);
-      }
-    }
-  }, [selectedBusinessId, loaded]);
-
-  const selectedBusiness = businesses.find(b => b.id === selectedBusinessId) || null;
+  const selectedBusiness = useMemo(
+    () => businesses.find(b => b.id === selectedBusinessId) || null,
+    [businesses, selectedBusinessId]
+  );
 
   const addBusiness = useCallback((name: string, description: string): Business => {
     const newBusiness: Business = {
@@ -118,8 +117,6 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       };
     }));
   }, []);
-
-  if (!loaded) return null;
 
   return (
     <BusinessContext.Provider value={{

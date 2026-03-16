@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { BrandDNA } from '@/types';
-import { Globe, Sparkles, Save, Loader2, Edit3, X, Check } from 'lucide-react';
+import { Globe, Sparkles, Loader2, Edit3, X, Check } from 'lucide-react';
 
 export default function BrandDNAPanel() {
   const { selectedBusiness, updateBrandDNA } = useBusinessContext();

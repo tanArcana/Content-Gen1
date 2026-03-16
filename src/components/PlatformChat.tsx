@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { Platform, PLATFORMS, ChatMessage } from '@/types';
 import { Send, Loader2, Trash2, Copy, Check } from 'lucide-react';
@@ -19,7 +19,10 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const platformInfo = PLATFORMS.find(p => p.id === platform)!;
-  const messages = selectedBusiness?.chats[platform] || [];
+  const messages = useMemo(
+    () => selectedBusiness?.chats[platform] || [],
+    [selectedBusiness?.chats, platform]
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

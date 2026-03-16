@@ -140,8 +140,6 @@ export default function Dashboard() {
                   ...Object.values(biz.chats).flatMap(msgs => msgs.map(m => m.timestamp)),
                   biz.createdAt
                 );
-                const activePlatforms = PLATFORMS.filter(p => biz.chats[p.id]?.length > 0);
-
                 return (
                   <div
                     key={biz.id}
