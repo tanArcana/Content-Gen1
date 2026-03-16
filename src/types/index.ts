@@ -17,7 +17,7 @@ export interface ChatMessage {
   timestamp: number;
 }
 
-export type Platform = 'instagram' | 'twitter' | 'linkedin' | 'tiktok';
+export type Platform = 'instagram' | 'youtube-shorts' | 'linkedin' | 'tiktok';
 
 export interface PlatformChat {
   platform: Platform;
@@ -44,12 +44,12 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
     description: 'Visual-first content with engaging captions, hashtags, and calls-to-action',
   },
   {
-    id: 'twitter',
-    label: 'X / Twitter',
-    color: '#000000',
-    icon: '𝕏',
-    maxLength: 280,
-    description: 'Concise, punchy posts with trending hooks and viral potential',
+    id: 'youtube-shorts',
+    label: 'YouTube Shorts',
+    color: '#FF0000',
+    icon: '🎬',
+    maxLength: 100,
+    description: 'Short-form vertical video scripts with hooks, retention tactics, and viral formats',
   },
   {
     id: 'linkedin',

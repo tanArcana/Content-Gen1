@@ -11,14 +11,17 @@ const PLATFORM_INSTRUCTIONS: Record<Platform, string> = {
 - Keep under 2200 characters
 - Consider Reels/Stories/Carousel format suggestions`,
 
-  twitter: `You are an X/Twitter content strategist. Create viral-worthy tweets with:
-- A strong hook that stops the scroll
-- Punchy, concise language (280 char limit for single tweets)
-- If a thread is appropriate, format as numbered tweets
-- Strategic use of trending formats
-- 1-3 relevant hashtags max
-- Engagement-driving questions or CTAs
-- Consider quote-tweet and reply strategies`,
+  'youtube-shorts': `You are a YouTube Shorts content strategist. Create viral short-form video scripts with:
+- A scroll-stopping hook in the first 1-2 seconds (pattern interrupt or bold claim)
+- Vertical video format (9:16 aspect ratio)
+- Duration guidance (15s, 30s, or 60s max)
+- Clear scene/shot descriptions in brackets
+- On-screen text overlay suggestions
+- Retention tactics (loops, cliffhangers, quick cuts)
+- Strong CTA (subscribe, like, comment)
+- Title suggestion optimized for YouTube search/discovery
+- Description with relevant keywords and hashtags
+- Consider trending Shorts formats and YouTube algorithm preferences`,
 
   linkedin: `You are a LinkedIn thought leadership strategist. Create professional content with:
 - A compelling hook line that drives curiosity
@@ -152,39 +155,45 @@ ${brandDNA.keywords?.map(k => `#${k.replace(/\s+/g, '')}`).join(' ') || '#conten
 
 **Strategy Note:** This post uses a curiosity-driven hook, aligns with your brand DNA values, and includes a low-barrier CTA to drive engagement.`,
 
-    twitter: `🐦 **X/Twitter Post**
+    'youtube-shorts': `🎬 **YouTube Shorts Script**
 
-Here's your on-brand tweet for ${brandName}:
-
----
-
-**Single Tweet:**
-${brandDNA.personality ? `[${brandDNA.personality} voice]` : ''}
-
-${prompt}?
-
-Most ${brandDNA.targetAudience || 'people'} get this wrong.
-
-The truth: ${brandDNA.uniqueSellingPoints?.[0] || 'It\'s simpler than you think.'}
-
-${brandDNA.keywords?.[0] ? `#${brandDNA.keywords[0].replace(/\s+/g, '')}` : '#trending'}
+Here's your viral YouTube Shorts script for ${brandName}:
 
 ---
 
-**Thread Option (1/4):**
-🧵 "${prompt}" — a thread on why this matters:
+**Title:** "${prompt} — You Need to See This"
+**Format:** Vertical (9:16) | Talking head + B-roll
+**Duration:** 30-45 seconds
 
-1/ The old way of thinking about ${brandDNA.contentThemes?.[0] || 'this'} is broken.
+---
 
-2/ Here's what ${brandDNA.targetAudience || 'smart people'} are doing instead...
+**[HOOK — First 2 seconds]**
+[Quick zoom into face / pattern interrupt]
+"Wait — ${brandDNA.targetAudience || 'nobody'} is talking about this yet."
+[Text overlay: "${prompt}"]
 
-3/ ${brandDNA.values?.[0] ? `It starts with ${brandDNA.values[0]}.` : 'It starts with a mindset shift.'}
+**[BUILD — 3-15 seconds]**
+[Cut to different angle or B-roll]
+"Here's the thing about ${prompt} that most ${brandDNA.targetAudience || 'people'} completely miss..."
+${brandDNA.values?.length ? `[Text overlay: "${brandDNA.values[0]}"]` : '[Text overlay: "The truth"]'}
 
-4/ ${brandDNA.uniqueSellingPoints?.[0] || 'The results speak for themselves.'}
+**[VALUE DROP — 15-35 seconds]**
+[Quick cuts between points, keep energy high]
+${brandDNA.uniqueSellingPoints?.map((usp, i) => `Point ${i + 1}: "${usp}"\n[Text overlay: Key insight ${i + 1}]`).join('\n') || '"Here\'s what actually works..."\n[Text overlay: The strategy]'}
 
-Repost if this resonates ♻️
+**[CTA + LOOP — Last 5 seconds]**
+[Point at camera, lean in]
+"Subscribe if you want Part 2 — this changes everything about ${brandDNA.contentThemes?.[0] || 'this topic'}."
+[Cut back to hook for seamless loop]
 
-**Strategy Note:** The single tweet uses contrarian framing to stop the scroll. The thread option provides deeper value for higher engagement.`,
+---
+
+**Description:**
+${prompt} — ${brandDNA.personality ? `From a ${brandDNA.personality} perspective` : 'What you need to know'}
+${brandDNA.keywords?.map(k => `#${k.replace(/\s+/g, '')}`).join(' ') || '#shorts #viral #trending'}
+#shorts #youtubeshorts
+
+**Strategy Note:** Uses the "pattern interrupt → value bomb → loop" format that performs well on YouTube Shorts. The seamless loop drives rewatches (boosting algorithm ranking), and the subscribe CTA converts viewers at peak engagement.`,
 
     linkedin: `💼 **LinkedIn Post**
 

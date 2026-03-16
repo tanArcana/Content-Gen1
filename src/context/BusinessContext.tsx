@@ -65,7 +65,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       brandDNA: null,
       chats: {
         instagram: [],
-        twitter: [],
+        'youtube-shorts': [],
         linkedin: [],
         tiktok: [],
       },
