@@ -3,8 +3,8 @@ import "./globals.css";
 import { BusinessProvider } from "@/context/BusinessContext";
 
 export const metadata: Metadata = {
-  title: "ContentGen — Multi-Business Brand Dashboard",
-  description: "Generate on-brand content across Instagram, X/Twitter, LinkedIn, and TikTok for multiple businesses",
+  title: "ContentGen — AI Media Agency Platform",
+  description: "AI-powered content creation studio for Instagram, X/Twitter, LinkedIn, and TikTok",
 };
 
 export default function RootLayout({

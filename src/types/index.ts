@@ -70,6 +70,69 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
   },
 ];
 
+// Content format types
+export type ContentFormat = 'post' | 'story' | 'reel' | 'carousel' | 'thread';
+
+export type ContentStatus = 'draft' | 'scheduled' | 'published' | 'archived';
+
+// A content brief (input to generation)
+export interface ContentBrief {
+  id: string;
+  businessId: string;
+  topic: string;
+  contentFormat: ContentFormat;
+  targetPlatforms: Platform[];
+  toneOverride?: string;
+  templateId?: string;
+  campaignId?: string;
+  additionalContext?: string;
+  createdAt: number;
+}
+
+// A single generated content piece for one platform
+export interface ContentVariant {
+  id: string;
+  briefId: string;
+  businessId: string;
+  platform: Platform;
+  contentFormat: ContentFormat;
+  content: string;
+  hashtags: string[];
+  caption?: string;
+  slides?: string[];
+  threadParts?: string[];
+  mediaPrompt?: string;
+  characterCount: number;
+  status: ContentStatus;
+  scheduledFor?: number;
+  tags: string[];
+  starred: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Campaign grouping
+export interface Campaign {
+  id: string;
+  businessId: string;
+  name: string;
+  description?: string;
+  color: string;
+  createdAt: number;
+}
+
+// Calendar event
+export interface CalendarEvent {
+  id: string;
+  contentVariantId: string;
+  businessId: string;
+  platform: Platform;
+  scheduledFor: number;
+  status: ContentStatus;
+  campaignId?: string;
+}
+
+// Legacy type kept for migration
 export interface SavedContent {
   id: string;
   businessId: string;
@@ -90,11 +153,23 @@ export interface PromptTemplate {
   category: string;
 }
 
+export type ViewType = 'dashboard' | 'create' | 'calendar' | 'library' | 'brand-dna' | 'templates' | 'settings';
+
 export interface AppSettings {
   apiKeyConfigured: boolean;
   defaultPlatform: Platform;
   autoSaveContent: boolean;
+  defaultContentFormat?: ContentFormat;
+  defaultTargetPlatforms?: Platform[];
 }
+
+export const CONTENT_FORMATS: { id: ContentFormat; label: string; icon: string; description: string }[] = [
+  { id: 'post', label: 'Post', icon: '📝', description: 'Standard caption or text post' },
+  { id: 'story', label: 'Story', icon: '📱', description: 'Vertical story with text overlays' },
+  { id: 'reel', label: 'Reel / Short', icon: '🎬', description: 'Short-form video script' },
+  { id: 'carousel', label: 'Carousel', icon: '🎠', description: 'Multi-slide swipeable content' },
+  { id: 'thread', label: 'Thread', icon: '🧵', description: 'Multi-part connected posts' },
+];
 
 export const DEFAULT_BRAND_DNA: BrandDNA = {
   voice: '',

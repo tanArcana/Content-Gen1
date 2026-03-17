@@ -3,18 +3,40 @@
 import { useState, useMemo } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
 import { PLATFORMS } from '@/types';
-import { Plus, Building2, Dna, MessageSquare, Trash2, Clock, BookMarked, LayoutTemplate, Settings, Star, TrendingUp, BarChart3 } from 'lucide-react';
+import {
+  Plus,
+  Building2,
+  Dna,
+  Trash2,
+  Clock,
+  BookMarked,
+  Star,
+  TrendingUp,
+  BarChart3,
+  PenSquare,
+  Calendar,
+} from 'lucide-react';
 
-// Legacy Dashboard component — kept for reference. DashboardView is now the active version.
-export default function Dashboard() {
-  const { businesses, selectedBusiness, selectBusiness, addBusiness, deleteBusiness, savedContent, currentView, setCurrentView } = useBusinessContext();
+export default function DashboardView() {
+  const {
+    businesses,
+    selectedBusiness,
+    selectBusiness,
+    addBusiness,
+    deleteBusiness,
+    savedContent,
+    contentVariants,
+    calendarEvents,
+    setCurrentView,
+  } = useBusinessContext();
+
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
 
   const handleAdd = () => {
     if (!newName.trim()) return;
-    const biz = addBusiness(newName.trim(), newDesc.trim());
+    addBusiness(newName.trim(), newDesc.trim());
     setNewName('');
     setNewDesc('');
     setShowAdd(false);
@@ -26,76 +48,61 @@ export default function Dashboard() {
     setCurrentView('create');
   };
 
-  // Analytics data
-  const totalMessages = businesses.reduce((sum, b) => sum + Object.values(b.chats).reduce((s, msgs) => s + msgs.length, 0), 0);
+  // Analytics
+  const totalVariants = contentVariants.length;
   const totalSaved = savedContent.length;
-  const totalStarred = savedContent.filter(c => c.starred).length;
+  const totalStarred = contentVariants.filter(v => v.starred).length + savedContent.filter(c => c.starred).length;
+  const scheduledCount = calendarEvents.filter(e => e.status === 'scheduled').length;
+  const businessesWithDNA = businesses.filter(b => b.brandDNA).length;
+
   const platformActivity = PLATFORMS.map(p => ({
     ...p,
-    messages: businesses.reduce((sum, b) => sum + (b.chats[p.id]?.length || 0), 0),
+    variants: contentVariants.filter(v => v.platform === p.id).length,
     saved: savedContent.filter(c => c.platform === p.id).length,
   }));
-  const businessesWithDNA = businesses.filter(b => b.brandDNA).length;
+
+  const totalContent = totalVariants + totalSaved;
 
   return (
     <div className="flex-1 bg-gray-950 min-h-screen">
       {/* Header */}
       <div className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-5">
+        <div className="max-w-6xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">
-                ✦
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">ContentGen</h1>
-                <p className="text-sm text-gray-500">Multi-Business Brand Dashboard</p>
-              </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Dashboard</h1>
+              <p className="text-sm text-gray-500">Overview of your content agency</p>
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentView('library')}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white text-sm transition-colors border border-gray-800"
+                onClick={() => setCurrentView('create')}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-colors"
               >
-                <BookMarked size={15} />
-                <span className="hidden sm:inline">Library</span>
-                {totalSaved > 0 && <span className="px-1.5 py-0.5 rounded-full bg-purple-600/20 text-purple-300 text-xs">{totalSaved}</span>}
-              </button>
-              <button
-                onClick={() => setCurrentView('templates')}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white text-sm transition-colors border border-gray-800"
-              >
-                <LayoutTemplate size={15} />
-                <span className="hidden sm:inline">Templates</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('settings')}
-                className="p-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors border border-gray-800"
-              >
-                <Settings size={15} />
+                <PenSquare size={16} />
+                Create Content
               </button>
               <button
                 onClick={() => setShowAdd(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-colors ml-2"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm transition-colors border border-gray-700"
               >
                 <Plus size={16} />
-                Add Business
+                Add Client
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Add Business Modal */}
         {showAdd && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <h2 className="text-lg font-semibold text-white mb-1">Add New Business</h2>
-              <p className="text-sm text-gray-500 mb-4">Start creating on-brand content for a new business</p>
+              <h2 className="text-lg font-semibold text-white mb-1">Add New Client</h2>
+              <p className="text-sm text-gray-500 mb-4">Start creating on-brand content for a new client</p>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Business Name *</label>
+                  <label className="block text-sm text-gray-400 mb-1">Client Name *</label>
                   <input
                     type="text"
                     placeholder="e.g., Acme Corp"
@@ -124,7 +131,7 @@ export default function Dashboard() {
                   disabled={!newName.trim()}
                   className="flex-1 px-5 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-medium transition-colors"
                 >
-                  Create Business
+                  Create Client
                 </button>
                 <button
                   onClick={() => { setShowAdd(false); setNewName(''); setNewDesc(''); }}
@@ -143,26 +150,26 @@ export default function Dashboard() {
             <div className="p-4 rounded-xl border border-gray-800 bg-gray-900/50">
               <div className="flex items-center gap-2 text-gray-500 mb-2">
                 <Building2 size={14} />
-                <span className="text-xs font-medium uppercase tracking-wider">Businesses</span>
+                <span className="text-xs font-medium uppercase tracking-wider">Clients</span>
               </div>
               <div className="text-2xl font-bold text-white">{businesses.length}</div>
               <div className="text-xs text-gray-500 mt-1">{businessesWithDNA} with Brand DNA</div>
             </div>
             <div className="p-4 rounded-xl border border-gray-800 bg-gray-900/50">
               <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <MessageSquare size={14} />
-                <span className="text-xs font-medium uppercase tracking-wider">Messages</span>
+                <BookMarked size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">Content</span>
               </div>
-              <div className="text-2xl font-bold text-white">{totalMessages}</div>
-              <div className="text-xs text-gray-500 mt-1">across all platforms</div>
+              <div className="text-2xl font-bold text-white">{totalContent}</div>
+              <div className="text-xs text-gray-500 mt-1">{totalStarred} starred</div>
             </div>
             <div className="p-4 rounded-xl border border-gray-800 bg-gray-900/50">
               <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <BookMarked size={14} />
-                <span className="text-xs font-medium uppercase tracking-wider">Saved</span>
+                <Calendar size={14} />
+                <span className="text-xs font-medium uppercase tracking-wider">Scheduled</span>
               </div>
-              <div className="text-2xl font-bold text-white">{totalSaved}</div>
-              <div className="text-xs text-gray-500 mt-1">{totalStarred} starred</div>
+              <div className="text-2xl font-bold text-white">{scheduledCount}</div>
+              <div className="text-xs text-gray-500 mt-1">upcoming posts</div>
             </div>
             <div className="p-4 rounded-xl border border-gray-800 bg-gray-900/50">
               <div className="flex items-center gap-2 text-gray-500 mb-2">
@@ -171,9 +178,9 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-2 mt-1">
                 {platformActivity.map(p => (
-                  <div key={p.id} className="flex-1 text-center" title={`${p.label}: ${p.messages} messages`}>
+                  <div key={p.id} className="flex-1 text-center" title={`${p.label}: ${p.variants + p.saved} items`}>
                     <div className="text-sm mb-1">{p.icon}</div>
-                    <div className="text-xs font-bold text-white">{p.messages}</div>
+                    <div className="text-xs font-bold text-white">{p.variants + p.saved}</div>
                   </div>
                 ))}
               </div>
@@ -182,15 +189,16 @@ export default function Dashboard() {
         )}
 
         {/* Platform Activity Bar */}
-        {businesses.length > 0 && totalMessages > 0 && (
+        {businesses.length > 0 && totalContent > 0 && (
           <div className="mb-8 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
             <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
               <TrendingUp size={14} />
-              Platform Activity
+              Platform Distribution
             </h3>
             <div className="space-y-2">
               {platformActivity.map(p => {
-                const pct = totalMessages > 0 ? (p.messages / totalMessages) * 100 : 0;
+                const count = p.variants + p.saved;
+                const pct = totalContent > 0 ? (count / totalContent) * 100 : 0;
                 return (
                   <div key={p.id} className="flex items-center gap-3">
                     <span className="text-sm w-6 text-center">{p.icon}</span>
@@ -201,7 +209,7 @@ export default function Dashboard() {
                         style={{ width: `${pct}%`, backgroundColor: p.color }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500 w-16 text-right">{p.messages} msgs</span>
+                    <span className="text-xs text-gray-500 w-16 text-right">{count} items</span>
                   </div>
                 );
               })}
@@ -215,37 +223,34 @@ export default function Dashboard() {
             <div className="w-20 h-20 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
               <Building2 className="text-gray-600" size={32} />
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">No businesses yet</h2>
+            <h2 className="text-xl font-semibold text-white mb-2">Welcome to ContentGen</h2>
             <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
-              Add your first business to start generating on-brand content optimized for Instagram, X/Twitter, LinkedIn, and TikTok.
+              Add your first client to start generating AI-powered content optimized for Instagram, X/Twitter, LinkedIn, and TikTok.
             </p>
             <button
               onClick={() => setShowAdd(true)}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium transition-all"
             >
               <Plus size={18} />
-              Add Your First Business
+              Add Your First Client
             </button>
           </div>
         )}
 
-        {/* Business Grid */}
+        {/* Client Grid */}
         {businesses.length > 0 && (
           <>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">
-                Your Businesses
+                Your Clients
                 <span className="text-gray-600 font-normal ml-2">({businesses.length})</span>
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {businesses.map(biz => {
-                const totalMsgs = Object.values(biz.chats).reduce((sum, msgs) => sum + msgs.length, 0);
-                const lastActivity = Math.max(
-                  ...Object.values(biz.chats).flatMap(msgs => msgs.map(m => m.timestamp)),
-                  biz.createdAt
-                );
+                const bizVariants = contentVariants.filter(v => v.businessId === biz.id).length;
                 const bizSaved = savedContent.filter(c => c.businessId === biz.id).length;
+                const bizTotal = bizVariants + bizSaved;
 
                 return (
                   <div
@@ -256,7 +261,7 @@ export default function Dashboard() {
                     <button
                       onClick={e => { e.stopPropagation(); deleteBusiness(biz.id); }}
                       className="absolute top-3 right-3 p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-gray-600 hover:text-red-400 transition-all"
-                      title="Delete business"
+                      title="Delete client"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -278,12 +283,13 @@ export default function Dashboard() {
 
                     <div className="flex items-center gap-2 mb-3">
                       {PLATFORMS.map(p => {
-                        const count = biz.chats[p.id]?.length || 0;
+                        const count = contentVariants.filter(v => v.businessId === biz.id && v.platform === p.id).length
+                          + savedContent.filter(c => c.businessId === biz.id && c.platform === p.id).length;
                         return (
                           <div
                             key={p.id}
                             className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs ${count > 0 ? 'bg-gray-800 text-gray-300' : 'bg-gray-900 text-gray-600'}`}
-                            title={`${p.label}: ${count} messages`}
+                            title={`${p.label}: ${count} items`}
                           >
                             <span className="text-xs">{p.icon}</span>
                             {count > 0 && <span>{count}</span>}
@@ -294,18 +300,12 @@ export default function Dashboard() {
 
                     <div className="flex items-center gap-4 text-xs text-gray-600 pt-3 border-t border-gray-800/50">
                       <span className="flex items-center gap-1">
-                        <MessageSquare size={11} />
-                        {totalMsgs} messages
+                        <BookMarked size={11} />
+                        {bizTotal} content
                       </span>
-                      {bizSaved > 0 && (
-                        <span className="flex items-center gap-1 text-purple-400/60">
-                          <BookMarked size={11} />
-                          {bizSaved} saved
-                        </span>
-                      )}
                       <span className="flex items-center gap-1">
                         <Clock size={11} />
-                        {formatRelativeTime(lastActivity)}
+                        {formatRelativeTime(biz.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export default function Dashboard() {
                   <Plus className="text-gray-600 group-hover:text-purple-400 transition-colors" size={24} />
                 </div>
                 <span className="text-sm text-gray-600 group-hover:text-gray-400 font-medium transition-colors">
-                  Add Business
+                  Add Client
                 </span>
               </div>
             </div>
