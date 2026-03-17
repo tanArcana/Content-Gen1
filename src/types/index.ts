@@ -69,6 +69,27 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
   },
 ];
 
+export type ContentType = 'post' | 'story' | 'thread' | 'reel-script' | 'carousel';
+
+export const CONTENT_TYPES: { id: ContentType; label: string; description: string }[] = [
+  { id: 'post', label: 'Post', description: 'Standard feed post with caption' },
+  { id: 'story', label: 'Story', description: 'Short-form ephemeral content' },
+  { id: 'thread', label: 'Thread', description: 'Multi-part connected posts' },
+  { id: 'reel-script', label: 'Reel / Video Script', description: 'Script for short-form video' },
+  { id: 'carousel', label: 'Carousel', description: 'Multi-slide visual content' },
+];
+
+export interface ContentPiece {
+  id: string;
+  businessId: string;
+  contentType: ContentType;
+  topic: string;
+  platforms: Platform[];
+  generatedContent: Record<Platform, string>;
+  status: 'draft' | 'generating' | 'ready';
+  createdAt: number;
+}
+
 export const DEFAULT_BRAND_DNA: BrandDNA = {
   voice: '',
   tone: '',

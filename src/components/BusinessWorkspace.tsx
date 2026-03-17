@@ -5,12 +5,14 @@ import { useBusinessContext } from '@/context/BusinessContext';
 import { Platform, PLATFORMS } from '@/types';
 import BrandDNAPanel from './BrandDNAPanel';
 import PlatformChat from './PlatformChat';
-import { Dna, ArrowLeft } from 'lucide-react';
+import ContentStudio from './ContentStudio';
+import { Dna, ArrowLeft, PenLine } from 'lucide-react';
 
 export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
   const { selectedBusiness } = useBusinessContext();
   const [activePlatform, setActivePlatform] = useState<Platform>('instagram');
   const [showDNA, setShowDNA] = useState(false);
+  const [showStudio, setShowStudio] = useState(false);
 
   if (!selectedBusiness) return null;
 
@@ -38,6 +40,17 @@ export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowStudio(!showStudio)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              showStudio
+                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
+                : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            <PenLine size={14} />
+            Content Studio
+          </button>
+          <button
             onClick={() => setShowDNA(!showDNA)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               showDNA
@@ -59,6 +72,13 @@ export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
         {showDNA && (
           <div className="w-96 border-r border-gray-800 overflow-y-auto bg-gray-950 shrink-0">
             <BrandDNAPanel />
+          </div>
+        )}
+
+        {/* Content Studio panel */}
+        {showStudio && (
+          <div className="w-[480px] border-r border-gray-800 overflow-y-auto bg-gray-950 shrink-0">
+            <ContentStudio />
           </div>
         )}
 
