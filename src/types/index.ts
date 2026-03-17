@@ -8,6 +8,7 @@ export interface BrandDNA {
   uniqueSellingPoints: string[];
   contentThemes: string[];
   sourceUrl?: string;
+  sourceUrls?: string[];
 }
 
 export interface ChatMessage {
