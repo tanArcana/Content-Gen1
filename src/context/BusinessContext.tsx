@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Business, BrandDNA, Platform, ChatMessage } from '@/types';
+import { Business, BrandDNA, Platform, ChatMessage, ContentPiece } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface BusinessContextType {
@@ -15,16 +15,22 @@ interface BusinessContextType {
   updateBrandDNA: (businessId: string, brandDNA: BrandDNA) => void;
   addChatMessage: (businessId: string, platform: Platform, message: ChatMessage) => void;
   clearChat: (businessId: string, platform: Platform) => void;
+  contentPieces: ContentPiece[];
+  addContentPiece: (piece: ContentPiece) => void;
+  updateContentPiece: (id: string, updates: Partial<ContentPiece>) => void;
+  deleteContentPiece: (id: string) => void;
 }
 
 const BusinessContext = createContext<BusinessContextType | null>(null);
 
 const STORAGE_KEY = 'content-gen1-businesses';
 const SELECTED_KEY = 'content-gen1-selected';
+const CONTENT_KEY = 'content-gen1-content-pieces';
 
 export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+  const [contentPieces, setContentPieces] = useState<ContentPiece[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -32,6 +38,12 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     if (stored) {
       try {
         setBusinesses(JSON.parse(stored));
+      } catch { /* ignore */ }
+    }
+    const storedContent = localStorage.getItem(CONTENT_KEY);
+    if (storedContent) {
+      try {
+        setContentPieces(JSON.parse(storedContent));
       } catch { /* ignore */ }
     }
     const selectedId = localStorage.getItem(SELECTED_KEY);
@@ -44,6 +56,12 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(businesses));
     }
   }, [businesses, loaded]);
+
+  useEffect(() => {
+    if (loaded) {
+      localStorage.setItem(CONTENT_KEY, JSON.stringify(contentPieces));
+    }
+  }, [contentPieces, loaded]);
 
   useEffect(() => {
     if (loaded) {
@@ -119,6 +137,18 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const addContentPiece = useCallback((piece: ContentPiece) => {
+    setContentPieces(prev => [piece, ...prev]);
+  }, []);
+
+  const updateContentPiece = useCallback((id: string, updates: Partial<ContentPiece>) => {
+    setContentPieces(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, []);
+
+  const deleteContentPiece = useCallback((id: string) => {
+    setContentPieces(prev => prev.filter(p => p.id !== id));
+  }, []);
+
   if (!loaded) return null;
 
   return (
@@ -133,6 +163,10 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       updateBrandDNA,
       addChatMessage,
       clearChat,
+      contentPieces,
+      addContentPiece,
+      updateContentPiece,
+      deleteContentPiece,
     }}>
       {children}
     </BusinessContext.Provider>
