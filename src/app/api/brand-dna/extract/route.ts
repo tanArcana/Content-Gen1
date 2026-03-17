@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       // Demo mode: return simulated extraction
@@ -37,17 +37,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Could not fetch the provided URL' }, { status: 400 });
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4',
         max_tokens: 1500,
-        system: `You are a brand strategist. Analyze the following webpage content and extract the brand's DNA. Return ONLY valid JSON with this exact structure:
+        messages: [
+          {
+            role: 'system',
+            content: `You are a brand strategist. Analyze the following webpage content and extract the brand's DNA. Return ONLY valid JSON with this exact structure:
 {
   "voice": "description of brand voice",
   "tone": "description of tone",
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
   "uniqueSellingPoints": ["usp1", "usp2"],
   "contentThemes": ["theme1", "theme2", "theme3"]
 }`,
-        messages: [
+          },
           {
             role: 'user',
             content: `Analyze this webpage content and extract the brand DNA:\n\nURL: ${url}\n\nContent:\n${pageContent}`,
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '{}';
+    const text = data.choices?.[0]?.message?.content || '{}';
 
     // Parse the JSON from the response
     const jsonMatch = text.match(/\{[\s\S]*\}/);

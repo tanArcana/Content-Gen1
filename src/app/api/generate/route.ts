@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       // Return a simulated response for demo purposes
       return NextResponse.json({
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(platform, brandDNA);
 
     const messages = [
+      { role: 'system', content: systemPrompt },
       ...(chatHistory || []).map((msg: { role: string; content: string }) => ({
         role: msg.role,
         content: msg.content,
@@ -89,29 +90,27 @@ export async function POST(req: NextRequest) {
       { role: 'user', content: prompt },
     ];
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4',
         max_tokens: 1500,
-        system: systemPrompt,
         messages,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Anthropic API error:', error);
+      console.error('OpenRouter API error:', error);
       return NextResponse.json({ error: 'API request failed' }, { status: 500 });
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || 'No content generated';
+    const content = data.choices?.[0]?.message?.content || 'No content generated';
 
     return NextResponse.json({ content });
   } catch (error) {
@@ -255,5 +254,5 @@ ${brandDNA.uniqueSellingPoints?.map((usp, i) => `Point ${i + 1}: "${usp}"\n[Text
 **Strategy Note:** Uses the "contrarian take" format trending on TikTok. The quick hook prevents scroll-past, and the series tease ("Part 2") drives follows.`,
   };
 
-  return templates[platform] || 'Content generated successfully. Connect your Anthropic API key for AI-powered generation.';
+  return templates[platform] || 'Content generated successfully. Connect your OpenRouter API key for AI-powered generation.';
 }

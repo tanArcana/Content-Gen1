@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Business name is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({
@@ -17,17 +17,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4',
         max_tokens: 1500,
-        system: `You are an expert brand strategist. Based on the business information provided, create a comprehensive Brand DNA. Return ONLY valid JSON with this exact structure:
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert brand strategist. Based on the business information provided, create a comprehensive Brand DNA. Return ONLY valid JSON with this exact structure:
 {
   "voice": "description of ideal brand voice",
   "tone": "description of ideal tone",
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
   "uniqueSellingPoints": ["usp1", "usp2", "usp3"],
   "contentThemes": ["theme1", "theme2", "theme3", "theme4"]
 }`,
-        messages: [
+          },
           {
             role: 'user',
             content: `Create a Brand DNA for this business:\n\nBusiness Name: ${businessName}\nDescription: ${description || 'Not provided'}\nIndustry: ${industry || 'Not specified'}\nTarget Audience: ${audience || 'Not specified'}`,
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '{}';
+    const text = data.choices?.[0]?.message?.content || '{}';
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
