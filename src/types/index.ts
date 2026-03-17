@@ -69,6 +69,32 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
   },
 ];
 
+export interface SavedContent {
+  id: string;
+  businessId: string;
+  platform: Platform;
+  content: string;
+  prompt: string;
+  starred: boolean;
+  tags: string[];
+  createdAt: number;
+}
+
+export interface PromptTemplate {
+  id: string;
+  name: string;
+  prompt: string;
+  platform: Platform | 'all';
+  isBuiltIn: boolean;
+  category: string;
+}
+
+export interface AppSettings {
+  apiKeyConfigured: boolean;
+  defaultPlatform: Platform;
+  autoSaveContent: boolean;
+}
+
 export const DEFAULT_BRAND_DNA: BrandDNA = {
   voice: '',
   tone: '',
@@ -79,3 +105,25 @@ export const DEFAULT_BRAND_DNA: BrandDNA = {
   uniqueSellingPoints: [],
   contentThemes: [],
 };
+
+export const BUILT_IN_TEMPLATES: PromptTemplate[] = [
+  // Instagram
+  { id: 'ig-product-launch', name: 'Product Launch', prompt: 'Create an Instagram post announcing our new product/feature. Include a captivating hook, key benefits, and a CTA to learn more.', platform: 'instagram', isBuiltIn: true, category: 'Launch' },
+  { id: 'ig-behind-scenes', name: 'Behind the Scenes', prompt: 'Create an authentic behind-the-scenes Instagram post showing our team/process. Make it relatable and humanize the brand.', platform: 'instagram', isBuiltIn: true, category: 'Engagement' },
+  { id: 'ig-carousel-tips', name: 'Tips Carousel', prompt: 'Create a 5-slide carousel post with actionable tips related to our industry. Include a hook slide, 3 tip slides, and a CTA slide.', platform: 'instagram', isBuiltIn: true, category: 'Educational' },
+  // Twitter
+  { id: 'tw-hot-take', name: 'Hot Take', prompt: 'Write a provocative but thoughtful hot take tweet about a current trend in our industry. Make it conversation-starting.', platform: 'twitter', isBuiltIn: true, category: 'Engagement' },
+  { id: 'tw-thread', name: 'Value Thread', prompt: 'Create a 5-tweet thread sharing valuable insights about our expertise area. Start with a hook tweet that makes people want to read the whole thread.', platform: 'twitter', isBuiltIn: true, category: 'Educational' },
+  { id: 'tw-announcement', name: 'Announcement', prompt: 'Write a tweet announcing something exciting about our business. Keep it punchy and shareable with a clear CTA.', platform: 'twitter', isBuiltIn: true, category: 'Launch' },
+  // LinkedIn
+  { id: 'li-thought-leadership', name: 'Thought Leadership', prompt: 'Write a LinkedIn post sharing a contrarian or unique perspective on our industry. Use personal storytelling and end with a discussion question.', platform: 'linkedin', isBuiltIn: true, category: 'Thought Leadership' },
+  { id: 'li-case-study', name: 'Case Study', prompt: 'Create a LinkedIn post sharing a success story or case study. Focus on the challenge, solution, and measurable results.', platform: 'linkedin', isBuiltIn: true, category: 'Social Proof' },
+  { id: 'li-hiring', name: 'We\'re Hiring', prompt: 'Write a compelling LinkedIn hiring post that showcases our culture and the exciting opportunity. Make it feel authentic, not corporate.', platform: 'linkedin', isBuiltIn: true, category: 'Recruitment' },
+  // TikTok
+  { id: 'tt-tutorial', name: 'Quick Tutorial', prompt: 'Create a TikTok script for a quick 30-second tutorial related to our product/service. Include hook, steps, and CTA.', platform: 'tiktok', isBuiltIn: true, category: 'Educational' },
+  { id: 'tt-trend', name: 'Trend Remix', prompt: 'Create a TikTok script that remixes a current trending format/sound to fit our brand message. Keep it fun and authentic.', platform: 'tiktok', isBuiltIn: true, category: 'Trending' },
+  { id: 'tt-story', name: 'Story Time', prompt: 'Write a TikTok storytime script sharing an interesting story about our brand/industry. Use the "you won\'t believe what happened" format.', platform: 'tiktok', isBuiltIn: true, category: 'Engagement' },
+  // Cross-platform
+  { id: 'all-repurpose', name: 'Repurpose Content', prompt: 'Take this idea and create content versions for all 4 platforms: a tweet, Instagram caption, LinkedIn post, and TikTok script concept.', platform: 'all', isBuiltIn: true, category: 'Multi-Platform' },
+  { id: 'all-weekly-series', name: 'Weekly Series', prompt: 'Create a recurring weekly content series concept. Include the series name, format, and this week\'s episode content.', platform: 'all', isBuiltIn: true, category: 'Series' },
+];

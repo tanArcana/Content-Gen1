@@ -5,16 +5,17 @@ import { useBusinessContext } from '@/context/BusinessContext';
 import { Platform, PLATFORMS } from '@/types';
 import BrandDNAPanel from './BrandDNAPanel';
 import PlatformChat from './PlatformChat';
-import { Dna, ArrowLeft } from 'lucide-react';
+import { Dna, ArrowLeft, BookMarked, LayoutTemplate } from 'lucide-react';
 
 export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
-  const { selectedBusiness } = useBusinessContext();
+  const { selectedBusiness, savedContent, setCurrentView } = useBusinessContext();
   const [activePlatform, setActivePlatform] = useState<Platform>('instagram');
   const [showDNA, setShowDNA] = useState(false);
 
   if (!selectedBusiness) return null;
 
   const hasBrandDNA = !!selectedBusiness.brandDNA;
+  const bizSavedCount = savedContent.filter(c => c.businessId === selectedBusiness.id).length;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-gray-950">
@@ -37,6 +38,21 @@ export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => { onBack(); setTimeout(() => setCurrentView('library'), 0); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
+            title="Content Library"
+          >
+            <BookMarked size={14} />
+            {bizSavedCount > 0 && <span className="text-xs text-purple-300">{bizSavedCount}</span>}
+          </button>
+          <button
+            onClick={() => { onBack(); setTimeout(() => setCurrentView('templates'), 0); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
+            title="Templates"
+          >
+            <LayoutTemplate size={14} />
+          </button>
           <button
             onClick={() => setShowDNA(!showDNA)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${

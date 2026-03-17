@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
-import { Platform, PLATFORMS, ChatMessage } from '@/types';
-import { Send, Loader2, Trash2, Copy, Check } from 'lucide-react';
+import { Platform, PLATFORMS, ChatMessage, BUILT_IN_TEMPLATES } from '@/types';
+import { Send, Loader2, Trash2, Copy, Check, BookMarked, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface PlatformChatProps {
@@ -11,32 +11,41 @@ interface PlatformChatProps {
 }
 
 export default function PlatformChat({ platform }: PlatformChatProps) {
-  const { selectedBusiness, addChatMessage, clearChat } = useBusinessContext();
+  const { selectedBusiness, addChatMessage, clearChat, saveContent, customTemplates } = useBusinessContext();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const platformInfo = PLATFORMS.find(p => p.id === platform)!;
   const messages = selectedBusiness?.chats[platform] || [];
 
+  // Get templates for this platform
+  const templates = [...BUILT_IN_TEMPLATES, ...customTemplates].filter(
+    t => t.platform === platform || t.platform === 'all'
+  );
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || !selectedBusiness || !selectedBusiness.brandDNA || loading) return;
+  const handleSend = async (promptOverride?: string) => {
+    const prompt = promptOverride || input.trim();
+    if (!prompt || !selectedBusiness || !selectedBusiness.brandDNA || loading) return;
 
     const userMessage: ChatMessage = {
       id: uuidv4(),
       role: 'user',
-      content: input.trim(),
+      content: prompt,
       timestamp: Date.now(),
     };
 
     addChatMessage(selectedBusiness.id, platform, userMessage);
     setInput('');
+    setShowTemplates(false);
     setLoading(true);
 
     try {
@@ -44,7 +53,7 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: input.trim(),
+          prompt,
           platform,
           brandDNA: selectedBusiness.brandDNA,
           chatHistory: messages.map(m => ({ role: m.role, content: m.content })),
@@ -78,6 +87,24 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSave = (msg: ChatMessage) => {
+    if (!selectedBusiness) return;
+    // Find the user prompt that preceded this assistant message
+    const msgIndex = messages.findIndex(m => m.id === msg.id);
+    const userPrompt = messages.slice(0, msgIndex).reverse().find(m => m.role === 'user')?.content || '';
+
+    saveContent({
+      businessId: selectedBusiness.id,
+      platform,
+      content: msg.content,
+      prompt: userPrompt,
+      starred: false,
+      tags: [],
+    });
+    setSavedId(msg.id);
+    setTimeout(() => setSavedId(null), 2000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -151,7 +178,7 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
             key={msg.id}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+            <div className={`group max-w-[85%] rounded-2xl px-4 py-3 ${
               msg.role === 'user'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-800 text-gray-200'
@@ -162,13 +189,26 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 {msg.role === 'assistant' && (
-                  <button
-                    onClick={() => handleCopy(msg.content, msg.id)}
-                    className="opacity-50 hover:opacity-100 transition-opacity"
-                    title="Copy content"
-                  >
-                    {copiedId === msg.id ? <Check size={12} /> : <Copy size={12} />}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleSave(msg)}
+                      className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity"
+                      title="Save to library"
+                    >
+                      {savedId === msg.id ? (
+                        <Check size={12} className="text-green-400" />
+                      ) : (
+                        <BookMarked size={12} />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleCopy(msg.content, msg.id)}
+                      className="opacity-50 hover:opacity-100 transition-opacity"
+                      title="Copy content"
+                    >
+                      {copiedId === msg.id ? <Check size={12} /> : <Copy size={12} />}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -189,9 +229,44 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Templates Dropdown */}
+      {showTemplates && hasBrandDNA && (
+        <div className="border-t border-gray-800 bg-gray-900/80 max-h-48 overflow-y-auto">
+          <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+            {templates.map(t => (
+              <button
+                key={t.id}
+                onClick={() => handleSend(t.prompt)}
+                className="text-left p-2.5 rounded-lg hover:bg-gray-800 transition-colors group"
+              >
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Zap size={10} className="text-purple-400" />
+                  <span className="text-xs font-medium text-white">{t.name}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">{t.category}</span>
+                </div>
+                <p className="text-xs text-gray-500 line-clamp-1">{t.prompt}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-gray-800">
         <div className="flex gap-2">
+          {hasBrandDNA && templates.length > 0 && (
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className={`px-3 py-2.5 rounded-xl border transition-all shrink-0 ${
+                showTemplates
+                  ? 'bg-purple-600/20 border-purple-500/30 text-purple-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'
+              }`}
+              title="Use a template"
+            >
+              <Zap size={16} />
+            </button>
+          )}
           <textarea
             ref={inputRef}
             value={input}
@@ -204,7 +279,7 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
             style={{ minHeight: '42px', maxHeight: '120px' }}
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!input.trim() || !hasBrandDNA || loading}
             className="px-4 py-2.5 rounded-xl text-white font-medium disabled:opacity-30 transition-all shrink-0"
             style={{ backgroundColor: loading ? '#4B5563' : platformInfo.color }}
