@@ -5,6 +5,7 @@ import { useBusinessContext } from '@/context/BusinessContext';
 import { Platform, PLATFORMS } from '@/types';
 import BrandDNAPanel from './BrandDNAPanel';
 import PlatformChat from './PlatformChat';
+import InstagramAgent from './InstagramAgent';
 import { Dna, ArrowLeft } from 'lucide-react';
 
 export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
@@ -95,7 +96,11 @@ export default function BusinessWorkspace({ onBack }: { onBack: () => void }) {
 
           {/* Active chat */}
           <div className="flex-1 overflow-hidden">
-            <PlatformChat platform={activePlatform} />
+            {activePlatform === 'instagram' ? (
+              <InstagramAgent />
+            ) : (
+              <PlatformChat platform={activePlatform} />
+            )}
           </div>
         </div>
       </div>

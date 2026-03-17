@@ -69,6 +69,40 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
   },
 ];
 
+export type InstagramContentType = 'post' | 'story' | 'reel';
+
+export interface InstagramContentConfig {
+  id: InstagramContentType;
+  label: string;
+  icon: string;
+  description: string;
+  color: string;
+}
+
+export const INSTAGRAM_CONTENT_TYPES: InstagramContentConfig[] = [
+  {
+    id: 'post',
+    label: 'Feed Post',
+    icon: '🖼️',
+    description: 'Carousel or single image posts with captions & hashtags',
+    color: '#E1306C',
+  },
+  {
+    id: 'story',
+    label: 'Story',
+    icon: '⏳',
+    description: 'Ephemeral content with polls, stickers & interactive elements',
+    color: '#F77737',
+  },
+  {
+    id: 'reel',
+    label: 'Reel',
+    icon: '🎬',
+    description: 'Short-form video scripts with hooks, transitions & audio',
+    color: '#833AB4',
+  },
+];
+
 export const DEFAULT_BRAND_DNA: BrandDNA = {
   voice: '',
   tone: '',
