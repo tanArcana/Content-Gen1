@@ -65,7 +65,7 @@ When the user provides a topic or trend, create platform-optimized content that 
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, platform, brandDNA, chatHistory } = await req.json();
+    const { prompt, platform, brandDNA, chatHistory, contentFormat, toneOverride } = await req.json();
 
     if (!prompt || !platform || !brandDNA) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -79,7 +79,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const systemPrompt = buildSystemPrompt(platform, brandDNA);
+    let systemPrompt = buildSystemPrompt(platform, brandDNA);
+
+    if (contentFormat) {
+      systemPrompt += `\n\nCONTENT FORMAT: Create this content specifically as a "${contentFormat}" format. Adapt structure, length, and style accordingly.`;
+    }
+    if (toneOverride) {
+      systemPrompt += `\n\nTONE OVERRIDE: Use a "${toneOverride}" tone for this piece, adjusting the brand voice accordingly while staying authentic.`;
+    }
 
     const messages = [
       { role: 'system', content: systemPrompt },

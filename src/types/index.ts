@@ -69,6 +69,39 @@ export const PLATFORMS: { id: Platform; label: string; color: string; icon: stri
   },
 ];
 
+export type ContentFormat = 'post' | 'story' | 'reel' | 'thread' | 'carousel' | 'script' | 'article';
+
+export const CONTENT_FORMATS: { id: ContentFormat; label: string; platforms: Platform[] }[] = [
+  { id: 'post', label: 'Post', platforms: ['instagram', 'twitter', 'linkedin', 'tiktok'] },
+  { id: 'story', label: 'Story / Ephemeral', platforms: ['instagram', 'tiktok'] },
+  { id: 'reel', label: 'Reel / Short Video', platforms: ['instagram', 'tiktok'] },
+  { id: 'thread', label: 'Thread', platforms: ['twitter', 'linkedin'] },
+  { id: 'carousel', label: 'Carousel', platforms: ['instagram', 'linkedin'] },
+  { id: 'script', label: 'Video Script', platforms: ['tiktok', 'instagram'] },
+  { id: 'article', label: 'Article / Long-form', platforms: ['linkedin'] },
+];
+
+export const TONE_OPTIONS = [
+  'Professional', 'Casual', 'Witty', 'Inspirational', 'Educational',
+  'Bold', 'Empathetic', 'Urgent', 'Playful', 'Authoritative',
+] as const;
+
+export const BRIEF_TEMPLATES: { label: string; topic: string; format: ContentFormat; tone: string }[] = [
+  { label: 'Product Launch', topic: 'Announce a new product or feature launch', format: 'post', tone: 'Bold' },
+  { label: 'Behind the Scenes', topic: 'Show the behind-the-scenes process of our work', format: 'reel', tone: 'Casual' },
+  { label: 'Industry Insight', topic: 'Share a key insight or trend in our industry', format: 'thread', tone: 'Authoritative' },
+  { label: 'Customer Story', topic: 'Highlight a customer success story or testimonial', format: 'post', tone: 'Inspirational' },
+  { label: 'How-To Guide', topic: 'Create a step-by-step tutorial related to our niche', format: 'carousel', tone: 'Educational' },
+  { label: 'Trending Topic', topic: 'Put our brand spin on a current trend or viral moment', format: 'reel', tone: 'Witty' },
+];
+
+export interface ContentBrief {
+  topic: string;
+  format: ContentFormat;
+  platforms: Platform[];
+  tone: string;
+}
+
 export const DEFAULT_BRAND_DNA: BrandDNA = {
   voice: '',
   tone: '',

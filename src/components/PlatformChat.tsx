@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useBusinessContext } from '@/context/BusinessContext';
-import { Platform, PLATFORMS, ChatMessage } from '@/types';
-import { Send, Loader2, Trash2, Copy, Check } from 'lucide-react';
+import { Platform, PLATFORMS, ChatMessage, ContentBrief, CONTENT_FORMATS } from '@/types';
+import { Loader2, Trash2, Copy, Check } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import ContentBriefForm from './ContentBriefForm';
 
 interface PlatformChatProps {
   platform: Platform;
@@ -12,11 +13,9 @@ interface PlatformChatProps {
 
 export default function PlatformChat({ platform }: PlatformChatProps) {
   const { selectedBusiness, addChatMessage, clearChat } = useBusinessContext();
-  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const platformInfo = PLATFORMS.find(p => p.id === platform)!;
   const messages = selectedBusiness?.chats[platform] || [];
@@ -25,66 +24,74 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || !selectedBusiness || !selectedBusiness.brandDNA || loading) return;
+  const handleBriefSubmit = async (brief: ContentBrief) => {
+    if (!selectedBusiness || !selectedBusiness.brandDNA || loading) return;
+
+    const formatLabel = CONTENT_FORMATS.find(f => f.id === brief.format)?.label || brief.format;
+    const platformLabels = brief.platforms.map(p => PLATFORMS.find(pl => pl.id === p)?.label || p);
+    const displayParts = [`**Topic:** ${brief.topic}`, `**Format:** ${formatLabel}`];
+    if (brief.platforms.length > 1) displayParts.push(`**Platforms:** ${platformLabels.join(', ')}`);
+    if (brief.tone) displayParts.push(`**Tone:** ${brief.tone}`);
 
     const userMessage: ChatMessage = {
       id: uuidv4(),
       role: 'user',
-      content: input.trim(),
+      content: displayParts.join('\n'),
       timestamp: Date.now(),
     };
 
     addChatMessage(selectedBusiness.id, platform, userMessage);
-    setInput('');
     setLoading(true);
 
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: input.trim(),
-          platform,
-          brandDNA: selectedBusiness.brandDNA,
-          chatHistory: messages.map(m => ({ role: m.role, content: m.content })),
-        }),
-      });
+    // Generate for each selected platform
+    const targetPlatforms = brief.platforms.length > 0 ? brief.platforms : [platform];
 
-      const data = await res.json();
+    for (const targetPlatform of targetPlatforms) {
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: brief.topic,
+            platform: targetPlatform,
+            brandDNA: selectedBusiness.brandDNA,
+            chatHistory: messages.map(m => ({ role: m.role, content: m.content })),
+            contentFormat: brief.format,
+            toneOverride: brief.tone,
+          }),
+        });
 
-      const assistantMessage: ChatMessage = {
-        id: uuidv4(),
-        role: 'assistant',
-        content: data.content || data.error || 'Failed to generate content',
-        timestamp: Date.now(),
-      };
+        const data = await res.json();
+        const targetLabel = targetPlatforms.length > 1
+          ? `**${PLATFORMS.find(p => p.id === targetPlatform)?.label}:**\n\n`
+          : '';
 
-      addChatMessage(selectedBusiness.id, platform, assistantMessage);
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: uuidv4(),
-        role: 'assistant',
-        content: 'An error occurred. Please try again.',
-        timestamp: Date.now(),
-      };
-      addChatMessage(selectedBusiness.id, platform, errorMessage);
-    } finally {
-      setLoading(false);
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: targetLabel + (data.content || data.error || 'Failed to generate content'),
+          timestamp: Date.now(),
+        };
+
+        addChatMessage(selectedBusiness.id, platform, assistantMessage);
+      } catch {
+        const errorMessage: ChatMessage = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: `An error occurred generating ${PLATFORMS.find(p => p.id === targetPlatform)?.label} content. Please try again.`,
+          timestamp: Date.now(),
+        };
+        addChatMessage(selectedBusiness.id, platform, errorMessage);
+      }
     }
+
+    setLoading(false);
   };
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
   };
 
   if (!selectedBusiness) return null;
@@ -132,17 +139,7 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
               Describe a topic, trend, or idea and get optimized {platformInfo.label} content
               tailored to your brand&apos;s DNA.
             </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {['Share a trending topic', 'Promote a new product', 'Engage our community', 'Share industry insight'].map(suggestion => (
-                <button
-                  key={suggestion}
-                  onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                  className="px-3 py-1.5 rounded-full bg-gray-800/50 hover:bg-gray-800 text-xs text-gray-400 hover:text-white transition-colors border border-gray-800 hover:border-gray-700"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs text-gray-600 mt-3">Use the content brief form below to get started.</p>
           </div>
         )}
 
@@ -189,35 +186,12 @@ export default function PlatformChat({ platform }: PlatformChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={hasBrandDNA ? `Describe a topic or trend for ${platformInfo.label}...` : 'Set up Brand DNA first'}
-            disabled={!hasBrandDNA || loading}
-            rows={1}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500 disabled:opacity-50 resize-none"
-            style={{ minHeight: '42px', maxHeight: '120px' }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || !hasBrandDNA || loading}
-            className="px-4 py-2.5 rounded-xl text-white font-medium disabled:opacity-30 transition-all shrink-0"
-            style={{ backgroundColor: loading ? '#4B5563' : platformInfo.color }}
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-          </button>
-        </div>
-        {platformInfo.maxLength && (
-          <p className="text-xs text-gray-600 mt-1.5 text-right">
-            Platform limit: {platformInfo.maxLength.toLocaleString()} chars
-          </p>
-        )}
-      </div>
+      {/* Content Brief Form */}
+      <ContentBriefForm
+        currentPlatform={platform}
+        onSubmit={handleBriefSubmit}
+        disabled={!hasBrandDNA || loading}
+      />
     </div>
   );
 }
